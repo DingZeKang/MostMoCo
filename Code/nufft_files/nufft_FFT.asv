@@ -1,0 +1,66 @@
+ function X = nufft_FFT(x, st)
+%function X = nufft_FFT(x, st)
+%	Compute d-dimensional NUFFT of signal/image x
+% in
+%	x	[N1,N2,...,Nd,(L)]	L input image(s) of size
+%						N1 x N2 x ... x Nd
+%	st	structure		precomputed by nufft_init()
+% out
+%	X	[M,(L)]			output spectra
+%
+% Copyright 2003-5-30	Jeff Fessler	The University of Michigan
+
+% if no arguments, then run some self tests
+
+Nd = st.Nd;
+Kd = st.Kd;
+
+dims = size(x);
+dd = length(Nd);
+if ndims(x) < dd, error 'input signal has too few dimensions', end
+if any(dims(1:dd) ~= Nd), error 'input signal has wrong size', end
+
+if all(round(Kd ./ Nd) == Kd ./ Nd)
+	persistent warned
+	if isempty(warned)	% only print this reminder the first time
+		disp('note in nufft: could save flops via smarter padded FFT')
+		warned = logical(1);
+	end
+end
+
+% the usual case is where L=1, i.e., there is just one input signal.
+%
+if ndims(x) == dd
+	x = x .* st.sn;		% apply scaling factors
+	Xk = col(fftn(x, Kd));	% [*Kd] oversampled FFT, padded at end
+
+%
+% otherwise, collapse all excess dimensions into just one
+%
+else
+	xx = reshape(x, [prod(Nd) prod(dims((dd+1):end))]);	% [*Nd,*L]
+	L = size(xx, 2);
+	Xk = zeros(prod(Kd),L);			% [*Kd,*L]
+	for ll=1:L
+		xl = reshape(xx(:,ll), [Nd 1]);	% l'th signal
+		xl = xl .* st.sn;		% scaling factors
+		Xk(:,ll) = col(fftn(xl,[Kd 1]));
+	end
+end
+
+
+%
+% interpolate using precomputed sparse matrix
+% or with tabulated interpolator
+%
+% % % % if ~isvar('st.interp_table')
+% % % % 	X = st.p * Xk;					% [M,*L]
+% % % % else
+% % % % 	X = feval(st.interp_table, st, Xk);
+% % % % end
+% % % % 
+% % % % if ndims(x) > dd
+% % % % 	X = reshape(X, [st.M dims((dd+1):end)]);	% [M,(L)]
+% % % % end
+
+
