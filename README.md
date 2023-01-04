@@ -10,3 +10,6 @@ https://doi.org/10.1002/mrm.29204
 
 Volunteer Lung MRI dataset: 
 https://zenodo.org/record/5760137#.Ya19rMdBwuU
+
+## Environment
+Bart(https://mrirecon.github.io/bart/) and gpuNUFFT(https://github.com/andyschwarzl/gpuNUFFT) should be installed to run this algorithm successfully.
